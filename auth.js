@@ -1,3 +1,4 @@
+// Assurez-vous que ce script est enregistré en tant que auth.js dans le même répertoire que votre index.html.
 document.addEventListener('DOMContentLoaded', function () {
     const loginButton = document.getElementById('login-button');
     loginButton.addEventListener('click', function(e) {
