@@ -13,42 +13,28 @@
         <div id="login-message"></div>
     </div>
 
-    <!-- Firebase Configuration avec des modules ES6 -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
 
-      // Votre configuration Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
-        authDomain: "site-perso-7be0e.firebaseapp.com",
-        projectId: "site-perso-7be0e",
-        storageBucket: "site-perso-7be0e.appspot.com",
-        messagingSenderId: "229019002509",
-        appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
-        measurementId: "G-4ZD50ZS2KD"
-      };
+    <!-- Firebase Configuration -->
+    <script>
+        // Votre configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+            authDomain: "site-perso-7be0e.firebaseapp.com",
+            projectId: "site-perso-7be0e",
+            storageBucket: "site-perso-7be0e.appspot.com",
+            messagingSenderId: "229019002509",
+            appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+            measurementId: "G-4ZD50ZS2KD"
+        };
 
-      // Initialise Firebase
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-
-      document.getElementById('login-button').addEventListener('click', (e) => {
-          e.preventDefault();
-          const email = document.getElementById('user-email').value;
-          const password = document.getElementById('user-password').value;
-          
-          signInWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-              // Connexion réussie
-              document.getElementById('login-message').textContent = `Bienvenue, ${userCredential.user.email}!`;
-          })
-          .catch((error) => {
-              const errorCode = error.code;
-              const errorMessage = error.message;
-              document.getElementById('login-message').textContent = `Erreur: ${errorMessage}`;
-          });
-      });
+        // Initialisation de Firebase
+        const app = firebase.initializeApp(firebaseConfig);
     </script>
+
+    <!-- Votre script de logique d'authentification -->
+    <script src="auth.js"></script>
 </body>
 </html>
