@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Page Sécurisée</title>
-    <!-- Assurez-vous que la version de Firebase correspond à celle que vous utilisez -->
-    <script type="module">
-      // Importez les SDK Firebase nécessaires
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
-      import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+</head>
+<body style="display: none;">
+    <h1>Bienvenue sur votre page sécurisée</h1>
+    <p>Cette page ne peut être affichée que si vous êtes connecté.</p>
+    <button id="logout-button">Déconnexion</button>
+    <!-- Plus de contenu sécurisé ici -->
 
-      // Configuration de votre application Firebase
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+      import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+
       const firebaseConfig = {
         apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
         authDomain: "site-perso-7be0e.firebaseapp.com",
@@ -20,25 +24,26 @@
         measurementId: "G-4ZD50ZS2KD"
       };
 
-      // Initialisation de Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
 
-      // Vérifiez l'état d'authentification de l'utilisateur
       onAuthStateChanged(auth, user => {
         if (user) {
-          // L'utilisateur est connecté, vous pouvez ici insérer du contenu supplémentaire ou effectuer d'autres vérifications
-          document.body.style.display = "block"; // Ou afficher des éléments spécifiques
+          document.body.style.display = "block";
         } else {
-          // L'utilisateur n'est pas connecté, redirigez-le vers la page de connexion
           window.location.href = 'index.html';
         }
       });
+
+      document.getElementById('logout-button').addEventListener('click', () => {
+        signOut(auth).then(() => {
+          // Déconnexion réussie, rediriger vers la page de connexion ou toute autre page
+          window.location.href = 'index.html';
+        }).catch((error) => {
+          // Une erreur s'est produite lors de la tentative de déconnexion
+          console.error('Erreur de déconnexion', error);
+        });
+      });
     </script>
-</head>
-<body style="display: none;">
-    <h1>Bienvenue sur votre page sécurisée</h1>
-    <p>Yo les poulettes, cette page ne peut être affichée que si vous êtes connecté.</p>
-    <!-- Plus de contenu sécurisé ici -->
 </body>
 </html>
