@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Site de Simon</title>
-    <!-- Firebase CDN -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
-    <!-- Configuration Firebase -->
-    <script src="firebase-config.js"></script>
 </head>
 <body>
     <h1>Bienvenue sur le site de Simon</h1>
-    <div id="login-form">
+    <div id="login-container">
         <input type="email" id="user-email" placeholder="Entrez votre email" required>
         <input type="password" id="user-password" placeholder="Entrez votre mot de passe" required>
-        <button id="login-btn">Se connecter</button>
+        <button id="login-button">Se connecter</button>
+        <div id="login-message"></div>
     </div>
-    <div id="login-message"></div>
 
-    <!-- Votre script JavaScript personnalisé -->
-    <script src="app.js"></script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+
+    <!-- Firebase Config -->
+    <script>
+        // Remplacez les valeurs ci-dessous par les paramètres de votre projet Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+          authDomain: "site-perso.firebaseapp.com",
+          projectId: "site-perso-7be0e",
+          storageBucket: "site-perso.appspot.com",
+          messagingSenderId: "229019002509",
+          appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+          measurementId: "G-4ZD50ZS2KD"
+        };
+
+        // Initialisation de Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <!-- Votre script de logique d'authentification -->
+    <script src="auth.js"></script>
 </body>
 </html>
