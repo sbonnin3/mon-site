@@ -42,6 +42,7 @@
 
           document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log("Le formulaire est intercepté."); // Pour le test
             var email = document.getElementById('user-email').value;
             var password = document.getElementById('user-password').value;
         
