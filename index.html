@@ -6,12 +6,40 @@
 </head>
 <body>
     <h1>Je t'aime Oriane ❤️</h1>
+    
     <h2>Connexion</h2>
     <form id="login-form">
         <input type="email" id="user-email" placeholder="Entrez votre email" required>
         <input type="password" id="user-password" placeholder="Entrez votre mot de passe" required>
         <button type="submit">Se connecter</button>
     </form>
+
+    <div id="login-message"></div>
+    
+    <script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('user-email').value;
+        var password = document.getElementById('user-password').value;
+    
+        signInWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            // Connexion réussie
+            var user = userCredential.user;
+            console.log("Connecté :", user);
+            // Affiche un message de bienvenue
+            document.getElementById('login-message').innerHTML = `<p>Bienvenue, ${user.email} ! Vous êtes connecté.</p>`;
+            // Vous pouvez également rediriger l'utilisateur vers une autre page ici
+          })
+          .catch((error) => {
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.error("Erreur d'authentification :", errorCode, errorMessage);
+            // Afficher un message d'erreur à l'utilisateur, si nécessaire
+            document.getElementById('login-message').innerHTML = `<p>Erreur : ${errorMessage}</p>`;
+          });
+    });
+    </script>
 
     <script type="module">
         import { auth } from './firebase-config.js';
