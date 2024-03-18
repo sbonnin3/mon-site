@@ -2,10 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Site de Simon</title>
+    <title>Page connexion</title>
 </head>
 <body>
-    <h1>Bienvenue sur le site de Simon</h1>
+    <h1>Bienvenue sur le site de Simon !</h1>
     <div id="login-container">
         <input type="email" id="user-email" placeholder="Entrez votre email" required>
         <input type="password" id="user-password" placeholder="Entrez votre mot de passe" required>
@@ -40,13 +40,12 @@
           
           signInWithEmailAndPassword(auth, email, password)
           .then((userCredential) => {
-              // Connexion réussie
-              document.getElementById('login-message').textContent = `Bienvenue, ${userCredential.user.email}!`;
+              // Redirection vers page.html après une connexion réussie
+              window.location.href = 'page.html';
           })
           .catch((error) => {
-              const errorCode = error.code;
-              const errorMessage = error.message;
-              document.getElementById('login-message').textContent = `Erreur: ${errorMessage}`;
+              // Gestion des erreurs de connexion
+              document.getElementById('login-message').textContent = `Erreur: ${error.message}`;
           });
       });
     </script>
