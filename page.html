@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Page Sécurisée</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body style="display: none;">
     <h1>Bienvenue sur votre page sécurisée</h1>
@@ -10,6 +16,100 @@
     <button id="logout-button">Déconnexion</button>
     <!-- Plus de contenu sécurisé ici -->
 
+    <!-- Intégration du jeu de serpent -->
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Taille d'une cellule du jeu
+        const gridSize = 20;
+        const canvasSize = 400;
+        const cellCount = canvasSize / gridSize;
+
+        let snake = [{ x: 10, y: 10 }];
+        let food = generateFood();
+
+        // Définition de la direction initiale
+        let dx = 0;
+        let dy = 0;
+
+        // Vitesse du jeu (en millisecondes)
+        let speed = 100;
+
+        // Écoute des touches de direction
+        document.addEventListener('keydown', changeDirection);
+
+        function changeDirection(e) {
+            if (e.key === 'ArrowUp' && dy === 0) {
+                dy = -gridSize;
+                dx = 0;
+            } else if (e.key === 'ArrowDown' && dy === 0) {
+                dy = gridSize;
+                dx = 0;
+            } else if (e.key === 'ArrowLeft' && dx === 0) {
+                dx = -gridSize;
+                dy = 0;
+            } else if (e.key === 'ArrowRight' && dx === 0) {
+                dx = gridSize;
+                dy = 0;
+            }
+        }
+
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * cellCount) * gridSize,
+                y: Math.floor(Math.random() * cellCount) * gridSize
+            };
+        }
+
+        function draw() {
+            // Efface le canvas
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            // Dessine le serpent
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+            });
+
+            // Dessine la nourriture
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+
+            // Déplace le serpent
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            // Vérifie si le serpent a mangé de la nourriture
+            if (head.x === food.x && head.y === food.y) {
+                // Génère une nouvelle position pour la nourriture
+                food = generateFood();
+            } else {
+                // Supprime le dernier segment du serpent
+                snake.pop();
+            }
+
+            // Vérifie si le serpent est sorti du canvas
+            if (head.x < 0 || head.x >= canvasSize || head.y < 0 || head.y >= canvasSize) {
+                // Arrête le jeu si le serpent est sorti du canvas
+                clearInterval(gameLoop);
+                alert('Game Over! Votre score : ' + (snake.length - 1));
+            }
+
+            // Vérifie si le serpent a heurté son propre corps
+            if (snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) {
+                // Arrête le jeu si le serpent a heurté son propre corps
+                clearInterval(gameLoop);
+                alert('Game Over! Votre score : ' + (snake.length - 1));
+            }
+        }
+
+        // Lance le jeu
+        const gameLoop = setInterval(draw, speed);
+    </script>
+
+    <!-- Script de déconnexion Firebase -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
       import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
