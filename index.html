@@ -10,13 +10,15 @@
         <input type="email" id="user-email" placeholder="Entrez votre email" required>
         <input type="password" id="user-password" placeholder="Entrez votre mot de passe" required>
         <button id="login-button">Se connecter</button>
+        <!-- Ajout d'un bouton pour l'inscription -->
+        <button id="signup-button">Créer un compte</button>
         <div id="login-message"></div>
     </div>
 
     <!-- Firebase Configuration avec des modules ES6 -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
       // Votre configuration Firebase
       const firebaseConfig = {
@@ -33,20 +35,32 @@
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
 
-      document.getElementById('login-button').addEventListener('click', (e) => {
+      document.getElementById('login-button').addEventListener('click', async (e) => {
           e.preventDefault();
           const email = document.getElementById('user-email').value;
           const password = document.getElementById('user-password').value;
           
-          signInWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-              // Redirection vers page.html après une connexion réussie
-              window.location.href = 'page.html';
-          })
-          .catch((error) => {
-              // Gestion des erreurs de connexion
+          try {
+              const userCredential = await signInWithEmailAndPassword(auth, email, password);
+              window.location.href = 'page.html'; // Redirection après connexion réussie
+          } catch (error) {
               document.getElementById('login-message').textContent = `Erreur: ${error.message}`;
-          });
+          }
+      });
+
+      document.getElementById('signup-button').addEventListener('click', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('user-email').value;
+          const password = document.getElementById('user-password').value;
+          
+          try {
+              const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+              document.getElementById('login-message').textContent = `Compte créé avec succès. Bienvenue, ${userCredential.user.email}!`;
+              // Optionnel : Connectez l'utilisateur directement ou redirigez-le vers une autre page
+              window.location.href = 'page.html'; // Par exemple, redirection après inscription
+          } catch (error) {
+              document.getElementById('login-message').textContent = `Erreur lors de la création: ${error.message}`;
+          }
       });
     </script>
 </body>
