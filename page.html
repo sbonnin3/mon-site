@@ -2,42 +2,38 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Page connecté</title>
-</head>
-<body>
-    <h1>Vous êtes maintenant connecté !</h1>
-    <p>Ceci est la page qui s'affiche après une connexion réussie.</p>
-    <div id="content" style="display: none;">
-        <p>C'est validé</p>
-    </div>
-    
-    <!-- Firebase Configuration avec des modules ES6 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-  
-        // Votre configuration Firebase
+    <title>Page sécurisée</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+    <script>
+        // Configuration Firebase (remplacez par vos propres paramètres Firebase)
         const firebaseConfig = {
-          apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
-          authDomain: "site-perso-7be0e.firebaseapp.com",
-          projectId: "site-perso-7be0e",
-          storageBucket: "site-perso-7be0e.appspot.com",
-          messagingSenderId: "229019002509",
-          appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
-          measurementId: "G-4ZD50ZS2KD"
+            apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+            authDomain: "site-perso-7be0e.firebaseapp.com",
+            projectId: "site-perso-7be0e",
+            storageBucket: "site-perso-7be0e.appspot.com",
+            messagingSenderId: "229019002509",
+            appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+            measurementId: "G-4ZD50ZS2KD"
         };
+
         // Initialisation de Firebase
         const app = firebase.initializeApp(firebaseConfig);
 
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                // Utilisateur connecté, montrer le contenu
-                document.getElementById('content').style.display = 'block';
-            } else {
-                // Pas d'utilisateur connecté, rediriger vers la page de connexion
+        // Vérification de l'authentification de l'utilisateur
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) {
+                // Si aucun utilisateur n'est connecté, rediriger vers index.html
                 window.location.href = 'index.html';
             }
+            // Si l'utilisateur est connecté, le contenu de la page peut être affiché.
+            // Vous pouvez mettre ici du code supplémentaire si nécessaire, une fois l'utilisateur authentifié.
         });
     </script>
+</head>
+<body>
+    <h1>Bienvenue sur votre page sécurisée</h1>
+    <p>Seuls les utilisateurs connectés peuvent voir ce contenu.</p>
+    <!-- Autres éléments de la page... -->
 </body>
 </html>
