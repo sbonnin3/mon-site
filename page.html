@@ -9,41 +9,64 @@
     <p>Cette page ne peut être affichée que si vous êtes connecté.</p>
     <button id="logout-button">Déconnexion</button>
     <!-- Plus de contenu sécurisé ici -->
-
+    <div id="chat-container">
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Écrivez un message">
+        <button id="send-button">Envoyer</button>
+    </div>
     <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
-      import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
-        authDomain: "site-perso-7be0e.firebaseapp.com",
-        projectId: "site-perso-7be0e",
-        storageBucket: "site-perso-7be0e.appspot.com",
-        messagingSenderId: "229019002509",
-        appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
-        measurementId: "G-4ZD50ZS2KD"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-
-      onAuthStateChanged(auth, user => {
-        if (user) {
-          document.body.style.display = "block";
-        } else {
-          window.location.href = 'index.html';
-        }
-      });
-
-      document.getElementById('logout-button').addEventListener('click', () => {
-        signOut(auth).then(() => {
-          // Déconnexion réussie, rediriger vers la page de connexion ou toute autre page
-          window.location.href = 'index.html';
-        }).catch((error) => {
-          // Une erreur s'est produite lors de la tentative de déconnexion
-          console.error('Erreur de déconnexion', error);
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+        import { getDatabase, ref, push, onValue } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
+      
+        const firebaseConfig = {
+          apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+          authDomain: "site-perso-7be0e.firebaseapp.com",
+          projectId: "site-perso-7be0e",
+          storageBucket: "site-perso-7be0e.appspot.com",
+          messagingSenderId: "229019002509",
+          appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+          measurementId: "G-4ZD50ZS2KD",
+          databaseURL: "https://site-perso-7be0e.firebaseio.com"
+        };
+      
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+      
+        const messagesRef = ref(database, 'messages');
+      
+        onAuthStateChanged(auth, user => {
+          if (user) {
+            document.body.style.display = "block";
+      
+            onValue(messagesRef, (snapshot) => {
+              const messages = snapshot.val();
+              document.getElementById('messages').innerHTML = '';
+              for (let id in messages) {
+                const message = messages[id];
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message.text;
+                document.getElementById('messages').appendChild(messageElement);
+              }
+            });
+          } else {
+            window.location.href = 'index.html';
+          }
         });
-      });
-    </script>
+      
+        document.getElementById('send-button').addEventListener('click', () => {
+          const text = document.getElementById('message-input').value;
+          push(messagesRef, { text });
+        });
+      
+        document.getElementById('logout-button').addEventListener('click', () => {
+          signOut(auth).then(() => {
+            window.location.href = 'index.html';
+          }).catch((error) => {
+            console.error('Erreur de déconnexion', error);
+          });
+        });
+    </script>      
 </body>
 </html>
