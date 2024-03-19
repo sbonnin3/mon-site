@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Discussion miam</title>
+    <title>Discussion</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -192,6 +192,16 @@
 
       
         document.getElementById('send-button').addEventListener('click', () => {
+            sendMessage();
+        });
+
+        document.getElementById('message-input').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') { // Vérifier si la touche pressée est "Entrée"
+                sendMessage(); // Appeler la fonction d'envoi de message
+            }
+        });
+
+        function sendMessage() {
             const messageInput = document.getElementById('message-input');
             const text = messageInput.value.trim();
             if (text !== '') { // Vérifier si le message n'est pas vide
@@ -204,7 +214,7 @@
                 });
                 messageInput.value = ''; // Réinitialiser le champ de texte
             }
-        });
+        }
 
         onValue(ref(database, 'messages'), (snapshot) => {
             const messagesContainer = document.getElementById('messages');
@@ -246,27 +256,6 @@
             console.error('Erreur de déconnexion', error);
           });
         });
-        
-        document.getElementById('message-input').addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') { // Vérifier si la touche pressée est "Entrée"
-                sendMessage(); // Appeler la fonction d'envoi de message
-            }
-        });
-        
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const text = messageInput.value.trim();
-            if (text !== '') { // Vérifier si le message n'est pas vide
-                const currentUser = auth.currentUser;
-                // Inclure l'uid
-                push(ref(database, 'messages'), {
-                    uid: currentUser.uid,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                messageInput.value = ''; // Réinitialiser le champ de texte
-            }
-        }
     </script>      
 </body>
 </html>
