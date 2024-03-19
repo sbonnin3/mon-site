@@ -154,25 +154,37 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.body.style.display = "block";
-                handleUserLogin(user);
+                // handleUserLogin(user); // Assurez-vous que cette fonction est définie ailleurs dans votre code.
 
-                // Modifier la fonction onValue pour append les messages au lieu de prepend
                 onValue(messagesRef, (snapshot) => {
                     const messagesContainer = document.getElementById('messages');
                     messagesContainer.innerHTML = ''; // Effacer les messages précédents
 
                     const messages = snapshot.val();
-                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                    const sortedMessages = Object.values(messages).sort((a, b) => b.timestamp - a.timestamp); // Notez que j'ai changé l'ordre pour afficher le message le plus récent en premier.
 
                     sortedMessages.forEach((message) => {
                         const messageDiv = document.createElement('div');
                         messageDiv.classList.add('message-div');
-                        const textSpan = document.createElement('span');
-                        textSpan.classList.add('message-text');
-                        textSpan.textContent = message.text; // Display only the message text
+                        
+                        // Récupérer l'e-mail de l'utilisateur associé à l'uid du message
+                        const userRef = ref(database, 'users/' + message.uid);
+                        onValue(userRef, (userSnapshot) => {
+                            const userInfo = userSnapshot.val();
+                            const email = userInfo && userInfo.email ? userInfo.email : "Pas d'email"; // Modifier le texte par défaut selon vos besoins.
 
-                        messageDiv.appendChild(textSpan);
-                        messagesContainer.appendChild(messageDiv);
+                            const emailSpan = document.createElement('span');
+                            emailSpan.classList.add('message-email');
+                            emailSpan.textContent = email + ": ";
+                            
+                            const textSpan = document.createElement('span');
+                            textSpan.classList.add('message-text');
+                            textSpan.textContent = message.text;
+
+                            messageDiv.appendChild(emailSpan);
+                            messageDiv.appendChild(textSpan);
+                            messagesContainer.appendChild(messageDiv);
+                        }, { onlyOnce: true });
                     });
 
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -182,7 +194,6 @@
                 window.location.href = 'index.html';
             }
         });
-
       
         document.getElementById('send-button').addEventListener('click', () => {
             sendMessage();
