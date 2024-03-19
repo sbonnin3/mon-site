@@ -97,7 +97,7 @@ body {
             clear: both;
         }
 
-        #back-button {
+        #accueil-button {
             /* Vos styles pour le bouton de retour ici */
             margin-top: 20px;
             padding: 10px 20px;
@@ -108,7 +108,7 @@ body {
             cursor: pointer;
         }
 
-        #back-button:hover {
+        #accueil-button:hover {
             background-color: #2980b9;
         }
 
@@ -161,7 +161,7 @@ body {
             <span id="email-display"></span>
         </div>
         <button id="logout-button">Déconnexion</button>
-        <button id="back-button">Retour au chat</button>
+        <button id="accueil-button">Retour à l'accueil</button>
     </div>
 
     <script type="module">
@@ -222,10 +222,9 @@ body {
             }
         });
 
-        document.getElementById('back-button').addEventListener('click', () => {
-            window.location.href = 'page.html';
+        document.getElementById('accueil-button').addEventListener('click', () => {
+            window.location.href = 'accueil.html';
         });
-
 
         document.getElementById('logout-button').addEventListener('click', () => {
             signOut(auth).then(() => {

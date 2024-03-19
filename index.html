@@ -83,7 +83,7 @@
             
             signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                window.location.href = 'page.html';
+                window.location.href = 'accueil.html';
             })
             .catch((error) => {
                 document.getElementById('login-message').textContent = `Erreur: ${error.message}`;
