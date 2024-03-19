@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil</title>
+</head>
+<body style="display: none;">
+    <div class="profile-container">
+        <h1>Perso</h1>
+        <button id="logout-button">Déconnexion</button>
+        <button id="back-button">Retour au chat</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+        import { getDatabase, ref, push, onValue, set } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
+      
+        const firebaseConfig = {
+          apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+          authDomain: "site-perso-7be0e.firebaseapp.com",
+          projectId: "site-perso-7be0e",
+          storageBucket: "site-perso-7be0e.appspot.com",
+          messagingSenderId: "229019002509",
+          appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+          measurementId: "G-4ZD50ZS2KD",
+          databaseURL: "https://site-perso-7be0e-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+      
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+      
+        const messagesRef = ref(database, 'messages');
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                document.body.style.display = "block";
+                document.getElementById('email-display').textContent = user.email;
+
+                // Utiliser le pseudo de la base de données s'il est défini, sinon utiliser l'adresse e-mail
+                const userRef = ref(database, 'users/' + user.uid);
+                onValue(userRef, (snapshot) => {
+                    const userInfo = snapshot.val();
+                    const pseudo = userInfo && userInfo.pseudo ? userInfo.pseudo : user.email;
+                    document.getElementById('pseudo-display').textContent = pseudo;
+                });
+
+                document.getElementById('edit-button').addEventListener('click', () => {
+                    document.getElementById('pseudo-display').style.display = 'none';
+                    document.getElementById('pseudo-input').style.display = 'inline';
+                    document.getElementById('save-button').style.display = 'inline';
+                    document.getElementById('edit-button').style.display = 'none';
+                    document.getElementById('pseudo-input').value = document.getElementById('pseudo-display').textContent;
+                });
+
+                document.getElementById('save-button').addEventListener('click', () => {
+                    const newPseudo = document.getElementById('pseudo-input').value.trim();
+                    set(userRef, { pseudo: newPseudo });
+
+                    document.getElementById('pseudo-display').style.display = 'inline';
+                    document.getElementById('pseudo-input').style.display = 'none';
+                    document.getElementById('save-button').style.display = 'none';
+                    document.getElementById('edit-button').style.display = 'inline';
+                });
+
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('back-button').addEventListener('click', () => {
+            window.location.href = 'page.html';
+        });
+
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Erreur de déconnexion', error);
+            });
+        });
+    </script>
+</body>
+</html>
