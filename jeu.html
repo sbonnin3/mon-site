@@ -79,6 +79,34 @@
         const auth = getAuth(app);
         const database = getDatabase(app);
 
+        document.getElementById('accueil-button').addEventListener('click', () => {
+            window.location.href = 'accueil.html';
+        });
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+  // Nettoyer l'état du joueur avant de se déconnecter
+  if (currentPlayer) {
+    set(ref(database, 'game/' + currentPlayer), {
+      choice: null,
+      email: null,
+      hasJoined: false
+    }).then(() => {
+      signOut(auth).then(() => {
+        window.location.href = 'index.html';
+      }).catch((error) => {
+        console.error('Erreur de déconnexion', error);
+      });
+    });
+  } else {
+    // Si l'utilisateur n'a pas rejoint en tant que joueur, se déconnecter directement
+    signOut(auth).then(() => {
+      window.location.href = 'index.html';
+    }).catch((error) => {
+      console.error('Erreur de déconnexion', error);
+    });
+  }
+});
+
         let currentPlayer = ''; // 'player1' ou 'player2'
         const gameRef = ref(database, 'game');
 
@@ -86,21 +114,27 @@
 document.getElementById('join-as-player2').addEventListener('click', () => joinGame('player2'));
 
 function joinGame(player) {
-  onValue(ref(database, 'game/' + player), (snapshot) => {
+  const playerRef = ref(database, 'game/' + player);
+  onValue(playerRef, (snapshot) => {
     const playerData = snapshot.val();
     if (!playerData || !playerData.email) {
-      // Si le joueur n'a pas déjà rejoint, permettre de rejoindre
-      set(ref(database, 'game/' + player), {
+      set(playerRef, {
         email: auth.currentUser.email,
         choice: null,
         hasJoined: true
+      }).then(() => {
+        const onDisconnectRef = playerRef;
+        onDisconnect(onDisconnectRef).set({
+          choice: null,
+          email: null,
+          hasJoined: false
+        });
+        currentPlayer = player;
+        document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'inline-block');
+        document.getElementById('player-status').textContent = `Vous êtes ${player}. Faites votre choix.`;
+        document.getElementById('join-as-player1').style.display = 'none';
+        document.getElementById('join-as-player2').style.display = 'none';
       });
-      currentPlayer = player;
-      document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'inline-block');
-      document.getElementById('player-status').textContent = `Vous êtes ${player}. Faites votre choix.`;
-      // Masquer les boutons de rejoindre pour empêcher d'autres de rejoindre comme le même joueur
-      document.getElementById('join-as-player1').style.display = 'none';
-      document.getElementById('join-as-player2').style.display = 'none';
     } else {
       alert("Ce rôle est déjà pris, veuillez choisir l'autre rôle.");
     }
@@ -128,6 +162,20 @@ onValue(gameRef, (snapshot) => {
     setTimeout(resetGame, 5000); // Attendre 5 secondes avant de réinitialiser
   }
 });
+
+function determineWinner(choice1, choice2) {
+            if(choice1 === choice2) {
+            return "C'est une égalité!";
+            } else if (
+            (choice1 === "pierre" && choice2 === "ciseaux") ||
+            (choice1 === "papier" && choice2 === "pierre") ||
+            (choice1 === "ciseaux" && choice2 === "papier")
+            ) {
+            return "Joueur 1 gagne!";
+            } else {
+            return "Joueur 2 gagne!";
+            }
+        }
 
         function resetGame() {
             setTimeout(() => {
@@ -158,7 +206,6 @@ onValue(gameRef, (snapshot) => {
                 });
             }, 5000); // Attendez 5 secondes avant de réinitialiser pour permettre l'affichage des résultats
         }
-        </script>
     </script>
 </body>
 </html>
