@@ -246,6 +246,21 @@
             console.error('Erreur de déconnexion', error);
           });
         });
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const text = messageInput.value.trim();
+            if (text !== '') { // Vérifier si le message n'est pas vide
+                const currentUser = auth.currentUser;
+                // Inclure l'uid
+                push(ref(database, 'messages'), {
+                    uid: currentUser.uid,
+                    text: text,
+                    timestamp: Date.now()
+                });
+                messageInput.value = ''; // Réinitialiser le champ de texte
+            }
+        }
     </script>      
 </body>
 </html>
