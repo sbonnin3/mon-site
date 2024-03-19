@@ -177,6 +177,7 @@
 
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 });
+
             } else {
                 window.location.href = 'index.html';
             }
@@ -208,34 +209,23 @@
             }
         }
 
-        onValue(ref(database, 'messages'), (snapshot) => {
+        onValue(messagesRef, (snapshot) => {
             const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Vider le conteneur de messages avant d'ajouter de nouveaux messages
+            messagesContainer.innerHTML = ''; // Clear previous messages
 
             const messages = snapshot.val();
             const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
             sortedMessages.forEach((message) => {
-                // Récupérer l'e-mail de l'utilisateur
-                const userRef = ref(database, 'users/' + message.uid);
-                onValue(userRef, (userSnapshot) => {
-                    const userInfo = userSnapshot.val();
-                    // Si aucun e-mail n'est trouvé, affiche 'Anonyme'
-                    const displayText = userInfo && userInfo.email ? userInfo.email : "Anonyme";
-                    
-                    const messageDiv = document.createElement('div');
-                    const displaySpan = document.createElement('span');
-                    displaySpan.textContent = displayText + " : ";
-                    displaySpan.classList.add('message-email'); // Utilisez la classe CSS appropriée
-                    
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = message.text;
-                    textSpan.classList.add('message-text');
-
-                    messageDiv.appendChild(displaySpan);
-                    messageDiv.appendChild(textSpan);
-                    messagesContainer.appendChild(messageDiv);
-                }, { onlyOnce: true });
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message-div');
+                
+                const textSpan = document.createElement('span');
+                textSpan.classList.add('message-text');
+                textSpan.textContent = message.text; // Directly setting the text content of the message
+                
+                messageDiv.appendChild(textSpan); // Appending textSpan to messageDiv
+                messagesContainer.appendChild(messageDiv); // Appending messageDiv to messagesContainer
             });
 
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
