@@ -3,6 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Page Sécurisée</title>
+    <style>
+        /* Ajouter vos styles ici, par exemple: */
+        #messages {
+            height: 300px; /* Limiter la hauteur de la zone des messages */
+            overflow-y: scroll; /* Ajouter une barre de défilement si nécessaire */
+            display: flex;
+            flex-direction: column-reverse; /* Inverser l'ordre d'affichage des messages */
+            /* autres styles... */
+        }
+        /* Style pour l'adresse email */
+        .message-email {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body style="display: none;">
     <h1>Bienvenue sur votre page sécurisée</h1>
@@ -58,41 +73,42 @@
         });
       
         document.getElementById('send-button').addEventListener('click', () => {
-  const messageInput = document.getElementById('message-input');
-  const text = messageInput.value;
-  messageInput.value = ''; // Effacer le champ après l'envoi
-  
-  push(ref(database, 'messages'), {
-    email: auth.currentUser.email, // Email de l'utilisateur connecté
-    text: text,
-    timestamp: Date.now() // Timestamp pour trier les messages
-  });
-});
+            const messageInput = document.getElementById('message-input');
+            const text = messageInput.value;
+            if (text.trim() !== '') { // Vérifier si le message n'est pas vide
+                const currentUser = auth.currentUser;
+                push(ref(database, 'messages'), {
+                    email: currentUser.email, // Enregistrer l'email de l'utilisateur
+                    text: text,
+                    timestamp: Date.now() // Enregistrer le timestamp du message
+                });
+                messageInput.value = ''; // Réinitialiser le champ de texte
+            }
+        });
 
-// Récupération et affichage des messages
-onValue(ref(database, 'messages'), (snapshot) => {
-  const messagesDiv = document.getElementById('messages');
-  messagesDiv.innerHTML = ''; // Effacer les anciens messages
-  
-  const messages = snapshot.val();
-  const sortedMessages = Object.keys(messages).sort((a, b) => messages[b].timestamp - messages[a].timestamp);
-  
-  sortedMessages.forEach((messageKey) => {
-    const message = messages[messageKey];
-    const messageElement = document.createElement('div');
-    
-    const emailSpan = document.createElement('span');
-    emailSpan.textContent = message.email + ': ';
-    emailSpan.style.fontWeight = 'bold';
-    
-    const textSpan = document.createElement('span');
-    textSpan.textContent = message.text;
+        // Affichage des messages
+        onValue(ref(database, 'messages'), (snapshot) => {
+            const messages = snapshot.val();
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Vider le conteneur de messages
 
-    messageElement.appendChild(emailSpan);
-    messageElement.appendChild(textSpan);
-    messagesDiv.appendChild(messageElement);
-  });
-});
+            // Créer une liste de messages triés par timestamp
+            const sortedMessages = Object.values(messages).sort((a, b) => b.timestamp - a.timestamp);
+
+            sortedMessages.forEach((message) => {
+                const messageDiv = document.createElement('div');
+                const emailSpan = document.createElement('span');
+                emailSpan.classList.add('message-email');
+                emailSpan.textContent = message.email;
+                const textSpan = document.createElement('span');
+                textSpan.classList.add('message-text');
+                textSpan.textContent = message.text;
+
+                messageDiv.appendChild(emailSpan);
+                messageDiv.appendChild(textSpan);
+                messagesContainer.appendChild(messageDiv);
+            });
+        });
       
         document.getElementById('logout-button').addEventListener('click', () => {
           signOut(auth).then(() => {
