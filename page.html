@@ -210,27 +210,29 @@
 
         onValue(ref(database, 'messages'), (snapshot) => {
             const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Vider le conteneur de messages
+            messagesContainer.innerHTML = ''; // Vider le conteneur de messages avant d'ajouter de nouveaux messages
 
             const messages = snapshot.val();
             const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
             sortedMessages.forEach((message) => {
+                // Récupérer le pseudo de l'utilisateur ou utiliser son adresse e-mail si aucun pseudo n'est trouvé
                 const userRef = ref(database, 'users/' + message.uid);
                 onValue(userRef, (userSnapshot) => {
                     const userInfo = userSnapshot.val();
-                    const pseudo = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
+                    // Si aucun pseudo n'est trouvé, 'Anonyme' sera remplacé par l'email de l'utilisateur
+                    const displayText = userInfo && userInfo.pseudo ? userInfo.pseudo : (userInfo && userInfo.email ? userInfo.email : "Anonyme");
                     
                     const messageDiv = document.createElement('div');
-                    const pseudoSpan = document.createElement('span');
-                    pseudoSpan.textContent = pseudo + " : "; // Utiliser le pseudo récupéré
-                    pseudoSpan.classList.add('message-pseudo');
+                    const displaySpan = document.createElement('span');
+                    displaySpan.textContent = displayText + " : ";
+                    displaySpan.classList.add('message-email'); // Utilisez la classe CSS appropriée
                     
                     const textSpan = document.createElement('span');
                     textSpan.textContent = message.text;
                     textSpan.classList.add('message-text');
 
-                    messageDiv.appendChild(pseudoSpan);
+                    messageDiv.appendChild(displaySpan);
                     messageDiv.appendChild(textSpan);
                     messagesContainer.appendChild(messageDiv);
                 }, { onlyOnce: true });
@@ -238,7 +240,7 @@
 
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
-      
+ 
         document.getElementById('logout-button').addEventListener('click', () => {
           signOut(auth).then(() => {
             window.location.href = 'index.html';
