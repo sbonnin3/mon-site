@@ -152,45 +152,44 @@
         const messagesRef = ref(database, 'messages');
       
         onAuthStateChanged(auth, user => {
-            if (user) {
-                document.body.style.display = "block";
-                handleUserLogin(user);
+    if (user) {
+        document.body.style.display = "block";
+        handleUserLogin(user);
 
-                // Modifier la fonction onValue pour append les messages au lieu de prepend
-                onValue(messagesRef, (snapshot) => {
-                    const messagesContainer = document.getElementById('messages');
-                    messagesContainer.innerHTML = ''; // Effacer les messages précédents
+        // Modifier la fonction onValue pour append les messages au lieu de prepend
+        onValue(messagesRef, (snapshot) => {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Effacer les messages précédents
 
-                    const messages = snapshot.val();
-                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+            const messages = snapshot.val();
+            const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
-                    sortedMessages.forEach((message) => {
-                        const messageDiv = document.createElement('div');
-                        const emailSpan = document.createElement('span');
-                        emailSpan.classList.add('message-email');
+            sortedMessages.forEach((message) => {
+                const messageDiv = document.createElement('div');
+                const textSpan = document.createElement('span');
+                textSpan.classList.add('message-text');
+                textSpan.textContent = message.text;
 
-                        // Récupérer l'e-mail de l'utilisateur
-                        const userRef = ref(database, 'users/' + message.uid);
-                        onValue(userRef, (snapshot) => {
-                            const userInfo = snapshot.val();
-                            emailSpan.textContent = userInfo && userInfo.email ? userInfo.email : "Anonyme";
-                            messageDiv.appendChild(emailSpan);
-                        }, { onlyOnce: true });
+                // Récupérer l'e-mail de l'utilisateur associé à l'uid du message
+                const userRef = ref(database, 'users/' + message.uid);
+                onValue(userRef, (snapshot) => {
+                    const userInfo = snapshot.val();
+                    const email = userInfo && userInfo.email ? userInfo.email : "Anonyme";
+                    textSpan.textContent = email + " : " + message.text;
+                    messagesContainer.appendChild(messageDiv);
+                }, { onlyOnce: true });
 
-                        const textSpan = document.createElement('span');
-                        textSpan.classList.add('message-text');
-                        textSpan.textContent = message.text;
+                messageDiv.appendChild(textSpan);
+                messagesContainer.appendChild(messageDiv);
+            });
 
-                        messageDiv.appendChild(textSpan);
-                        messagesContainer.appendChild(messageDiv);
-                    });
-
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                });
-            } else {
-                window.location.href = 'index.html';
-            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
+    } else {
+        window.location.href = 'index.html';
+    }
+});
+
       
         document.getElementById('send-button').addEventListener('click', () => {
             const messageInput = document.getElementById('message-input');
