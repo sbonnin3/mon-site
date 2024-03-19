@@ -154,53 +154,33 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.body.style.display = "block";
-                document.getElementById('send-button').addEventListener('click', () => {
-                const messageInput = document.getElementById('message-input');
-                const text = messageInput.value.trim();
-                if (text) {
-                    // Ici, récupérez le pseudo de l'utilisateur avant de pousser le message
-                    const userRef = ref(database, 'users/' + user.uid);
-                    onValue(userRef, (snapshot) => {
-                        const userInfo = snapshot.val();
-                        const pseudo = userInfo && userInfo.pseudo ? userInfo.pseudo : user.email;
 
-                        // Maintenant, poussez le message avec le pseudo actuel
-                        push(ref(database, 'messages'), {
-                            uid: user.uid, // Stockez l'uid de l'utilisateur avec le message
-                            pseudo: pseudo, // Utilisez le pseudo récupéré
-                            text: text,
-                            timestamp: Date.now()
-                        });
-
-                        messageInput.value = ''; // Réinitialiser le champ de texte après l'envoi
-                    }, { onlyOnce: true }); // Utilisez l'option { onlyOnce: true } pour lire une seule fois
-                }
-            });
-            // Récupération et affichage des messages avec le pseudo au lieu de l'email
+                // Modifier la fonction onValue pour append les messages au lieu de prepend
                 onValue(messagesRef, (snapshot) => {
                     const messagesContainer = document.getElementById('messages');
-                    messagesContainer.innerHTML = '';
+                    messagesContainer.innerHTML = ''; // Effacer les messages précédents
+
                     const messages = snapshot.val();
                     const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
                     sortedMessages.forEach((message) => {
-                        // Création d'un div pour chaque message
                         const messageDiv = document.createElement('div');
                         const pseudoSpan = document.createElement('span');
                         pseudoSpan.classList.add('message-pseudo');
 
-                        // Ici, on va chercher le pseudo associé à chaque message
+                        // Ici, on va chercher le pseudo associé à l'uid du message
                         const userRef = ref(database, 'users/' + message.uid);
                         onValue(userRef, (snapshot) => {
                             const userInfo = snapshot.val();
                             pseudoSpan.textContent = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
+                            // Assurez-vous d'ajouter le pseudoSpan dans le DOM après l'avoir récupéré
+                            messageDiv.appendChild(pseudoSpan);
                         }, { onlyOnce: true });
 
                         const textSpan = document.createElement('span');
                         textSpan.classList.add('message-text');
                         textSpan.textContent = message.text;
 
-                        messageDiv.appendChild(pseudoSpan);
                         messageDiv.appendChild(textSpan);
                         messagesContainer.appendChild(messageDiv);
                     });
