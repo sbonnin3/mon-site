@@ -166,11 +166,10 @@
 
                     sortedMessages.forEach((message) => {
                         const messageDiv = document.createElement('div');
+                        messageDiv.classList.add('message-div');
                         const textSpan = document.createElement('span');
                         textSpan.classList.add('message-text');
-                        textSpan.textContent = message.text;
-
-                        textSpan.textContent = message.text;
+                        textSpan.textContent = message.text; // Display only the message text
 
                         messageDiv.appendChild(textSpan);
                         messagesContainer.appendChild(messageDiv);
