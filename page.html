@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Discussion</title>
+    <title>Discussion miam</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -152,43 +152,43 @@
         const messagesRef = ref(database, 'messages');
       
         onAuthStateChanged(auth, user => {
-    if (user) {
-        document.body.style.display = "block";
-        handleUserLogin(user);
+            if (user) {
+                document.body.style.display = "block";
+                handleUserLogin(user);
 
-        // Modifier la fonction onValue pour append les messages au lieu de prepend
-        onValue(messagesRef, (snapshot) => {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Effacer les messages précédents
+                // Modifier la fonction onValue pour append les messages au lieu de prepend
+                onValue(messagesRef, (snapshot) => {
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = ''; // Effacer les messages précédents
 
-            const messages = snapshot.val();
-            const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                    const messages = snapshot.val();
+                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
-            sortedMessages.forEach((message) => {
-                const messageDiv = document.createElement('div');
-                const textSpan = document.createElement('span');
-                textSpan.classList.add('message-text');
-                textSpan.textContent = message.text;
+                    sortedMessages.forEach((message) => {
+                        const messageDiv = document.createElement('div');
+                        const textSpan = document.createElement('span');
+                        textSpan.classList.add('message-text');
+                        textSpan.textContent = message.text;
 
-                // Récupérer l'e-mail de l'utilisateur associé à l'uid du message
-                const userRef = ref(database, 'users/' + message.uid);
-                onValue(userRef, (snapshot) => {
-                    const userInfo = snapshot.val();
-                    const email = userInfo && userInfo.email ? userInfo.email : "Anonyme";
-                    textSpan.textContent = email + " : " + message.text;
-                    messagesContainer.appendChild(messageDiv);
-                }, { onlyOnce: true });
+                        // Récupérer l'e-mail de l'utilisateur associé à l'uid du message
+                        const userRef = ref(database, 'users/' + message.uid);
+                        onValue(userRef, (snapshot) => {
+                            const userInfo = snapshot.val();
+                            const email = userInfo && userInfo.email ? userInfo.email : "Anonyme";
+                            textSpan.textContent = email + " : " + message.text;
+                            messagesContainer.appendChild(messageDiv);
+                        }, { onlyOnce: true });
 
-                messageDiv.appendChild(textSpan);
-                messagesContainer.appendChild(messageDiv);
-            });
+                        messageDiv.appendChild(textSpan);
+                        messagesContainer.appendChild(messageDiv);
+                    });
 
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
         });
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 
       
         document.getElementById('send-button').addEventListener('click', () => {
