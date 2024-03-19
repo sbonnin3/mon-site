@@ -24,7 +24,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
         }
-        input[type="email"], input[type="password"] {
+        input[type="email"], input[type="password"], input[type="text"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -55,6 +55,10 @@
         <h1>Veuillez vous connecter !</h1>
         <input type="email" id="user-email" placeholder="Entrez votre email" required>
         <input type="password" id="user-password" placeholder="Entrez votre mot de passe" required>
+        
+        <!-- Champ pour le pseudo -->
+        <input type="text" id="user-pseudo" placeholder="Entrez votre pseudo" style="display: none;">
+        
         <button id="login-button">Se connecter</button>
         <div id="login-message"></div>
     </div>
@@ -80,6 +84,7 @@
             e.preventDefault();
             const email = document.getElementById('user-email').value;
             const password = document.getElementById('user-password').value;
+            const pseudo = document.getElementById('user-pseudo').value;
             
             signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
@@ -88,6 +93,13 @@
             .catch((error) => {
                 document.getElementById('login-message').textContent = `Erreur: ${error.message}`;
             });
+        });
+
+        // Afficher le champ de pseudo si aucun pseudo n'est déjà défini
+        auth.onAuthStateChanged((user) => {
+            if (user && !user.displayName) {
+                document.getElementById('user-pseudo').style.display = 'block';
+            }
         });
     </script>
 </body>
