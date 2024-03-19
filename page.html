@@ -54,22 +54,36 @@
         const messagesRef = ref(database, 'messages');
       
         onAuthStateChanged(auth, user => {
-          if (user) {
-            document.body.style.display = "block";
-      
-            onValue(messagesRef, (snapshot) => {
-              const messages = snapshot.val();
-              document.getElementById('messages').innerHTML = '';
-              for (let id in messages) {
-                const message = messages[id];
-                const messageElement = document.createElement('div');
-                messageElement.textContent = message.text;
-                document.getElementById('messages').appendChild(messageElement);
-              }
-            });
-          } else {
-            window.location.href = 'index.html';
-          }
+            if (user) {
+                document.body.style.display = "block";
+                
+                // Modifier la fonction onValue pour append les messages au lieu de prepend
+                onValue(messagesRef, (snapshot) => {
+                const messagesContainer = document.getElementById('messages');
+                messagesContainer.innerHTML = ''; // Effacer les messages précédents
+
+                const messages = snapshot.val();
+                // Trier les messages par timestamp
+                const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+
+                sortedMessages.forEach((message) => {
+                    const messageDiv = document.createElement('div');
+                    const emailSpan = document.createElement('span');
+                    emailSpan.textContent = message.email + ': ';
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = message.text;
+                    
+                    messageDiv.appendChild(emailSpan);
+                    messageDiv.appendChild(textSpan);
+                    messagesContainer.appendChild(messageDiv); // Ajouter le nouveau message en bas
+                });
+
+                // Faire défiler le conteneur vers le bas pour afficher le dernier message
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
         });
       
         document.getElementById('send-button').addEventListener('click', () => {
