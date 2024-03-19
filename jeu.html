@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Jeu Pierre-Papier-Ciseaux</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #logout-button, #accueil-button {
+            background-color: #f44336;
+        }
+        #logout-button:hover, #accueil-button:hover {
+            background-color: #d32f2f;
+        }
+        #player-status, #result {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        #game-area button {
+            display: none; /* Cache les boutons du jeu jusqu'à ce que le joueur rejoigne */
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h1>Jeu Pierre-Papier-Ciseaux</h1>
+        <button id="logout-button">Déconnexion</button>
+        <button id="accueil-button">Accueil</button>
+        <button id="join-as-player1">Rejoindre comme Joueur 1</button>
+        <button id="join-as-player2">Rejoindre comme Joueur 2</button>
+        <div id="game-area">
+            <h2>Fais ton choix :</h2>
+            <button id="pierre">Pierre</button>
+            <button id="papier">Papier</button>
+            <button id="ciseaux">Ciseaux</button>
+            <div id="player-status"></div>
+            <div id="result"></div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
+        import { getDatabase, ref, set, onValue, update } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
+      
+        const firebaseConfig = {
+          apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
+          authDomain: "site-perso-7be0e.firebaseapp.com",
+          projectId: "site-perso-7be0e",
+          storageBucket: "site-perso-7be0e.appspot.com",
+          messagingSenderId: "229019002509",
+          appId: "1:229019002509:web:ec0f5cdb1e92a4568ee4c4",
+          measurementId: "G-4ZD50ZS2KD",
+          databaseURL: "https://site-perso-7be0e-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        let currentPlayer = ''; // 'player1' ou 'player2'
+        const gameRef = ref(database, 'game');
+
+        document.getElementById('join-as-player1').addEventListener('click', () => joinGame('player1'));
+document.getElementById('join-as-player2').addEventListener('click', () => joinGame('player2'));
+
+function joinGame(player) {
+  onValue(ref(database, 'game/' + player), (snapshot) => {
+    const playerData = snapshot.val();
+    if (!playerData || !playerData.email) {
+      // Si le joueur n'a pas déjà rejoint, permettre de rejoindre
+      set(ref(database, 'game/' + player), {
+        email: auth.currentUser.email,
+        choice: null,
+        hasJoined: true
+      });
+      currentPlayer = player;
+      document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'inline-block');
+      document.getElementById('player-status').textContent = `Vous êtes ${player}. Faites votre choix.`;
+      // Masquer les boutons de rejoindre pour empêcher d'autres de rejoindre comme le même joueur
+      document.getElementById('join-as-player1').style.display = 'none';
+      document.getElementById('join-as-player2').style.display = 'none';
+    } else {
+      alert("Ce rôle est déjà pris, veuillez choisir l'autre rôle.");
+    }
+  }, {
+    onlyOnce: true
+  });
+}
+
+// Gestion des choix des joueurs
+document.querySelectorAll('#game-area button').forEach(button => {
+  button.addEventListener('click', function() {
+    const playerChoice = this.id;
+    update(ref(database, 'game/' + currentPlayer), { choice: playerChoice });
+    document.getElementById('player-status').textContent = 'Choix fait. En attente de l\'autre joueur...';
+  });
+});
+
+// Surveillance du jeu pour déterminer le gagnant
+onValue(gameRef, (snapshot) => {
+  const gameData = snapshot.val();
+  if (gameData && gameData.player1 && gameData.player2 && gameData.player1.choice && gameData.player2.choice) {
+    const result = determineWinner(gameData.player1.choice, gameData.player2.choice);
+    let winnerEmail = result === "C'est une égalité!" ? "Égalité, pas de gagnant!" : (result === "Joueur 1 gagne!" ? gameData.player1.email : gameData.player2.email);
+    document.getElementById('result').textContent = `Résultat : ${result}. Gagnant : ${winnerEmail}`;
+    setTimeout(resetGame, 5000); // Attendre 5 secondes avant de réinitialiser
+  }
+});
+
+        function resetGame() {
+            setTimeout(() => {
+                set(ref(database, 'game'), {
+                player1: {
+                    choice: null,
+                    email: null,
+                    hasJoined: false // Indique si le joueur a rejoint
+                },
+                player2: {
+                    choice: null,
+                    email: null,
+                    hasJoined: false // Indique si le joueur a rejoint
+                }
+                })
+                .then(() => {
+                console.log('Jeu réinitialisé pour une nouvelle partie.');
+                document.getElementById('player-status').textContent = 'Le jeu a été réinitialisé. Rejoignez comme Joueur 1 ou Joueur 2.';
+                document.getElementById('result').textContent = '';
+                
+                // Réinitialiser l'état des boutons pour permettre de rejoindre à nouveau
+                document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'none');
+                document.getElementById('join-as-player1').style.display = 'inline-block';
+                document.getElementById('join-as-player2').style.display = 'inline-block';
+                })
+                .catch((error) => {
+                console.error('Erreur lors de la réinitialisation du jeu: ', error);
+                });
+            }, 5000); // Attendez 5 secondes avant de réinitialiser pour permettre l'affichage des résultats
+        }
+        </script>
+    </script>
+</body>
+</html>

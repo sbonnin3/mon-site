@@ -76,6 +76,21 @@
                 #perso-button:hover {
                     background-color: #2980b9;
                 }
+
+                #jeu-button {
+                    /* Vos styles pour le bouton de retour ici */
+                    margin-top: 20px;
+                    padding: 10px 20px;
+                    background-color: #3498db;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                #jeu-button:hover {
+                    background-color: #2980b9;
+                }
             </style>
 </head>
 <body style="display: none;">
@@ -86,6 +101,7 @@
         <button id="chat-button">Ouvrir la discussion</button>
         <button id="profil-button">Profil</button>
         <button id="perso-button">Perso</button>
+        <button id="jeu-button">Jeu</button>
     </div>
 
     <script type="module">
@@ -126,6 +142,10 @@
 
         document.getElementById('perso-button').addEventListener('click', () => {
             window.location.href = 'perso.html';
+        });
+
+        document.getElementById('jeu-button').addEventListener('click', () => {
+            window.location.href = 'jeu.html';
         });
 
         document.getElementById('logout-button').addEventListener('click', () => {
