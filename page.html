@@ -166,16 +166,15 @@
 
                     sortedMessages.forEach((message) => {
                         const messageDiv = document.createElement('div');
-                        const pseudoSpan = document.createElement('span');
-                        pseudoSpan.classList.add('message-pseudo');
+                        const emailSpan = document.createElement('span');
+                        emailSpan.classList.add('message-email');
 
-                        // Ici, on va chercher le pseudo associé à l'uid du message
+                        // Récupérer l'e-mail de l'utilisateur
                         const userRef = ref(database, 'users/' + message.uid);
                         onValue(userRef, (snapshot) => {
                             const userInfo = snapshot.val();
-                            pseudoSpan.textContent = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
-                            // Assurez-vous d'ajouter le pseudoSpan dans le DOM après l'avoir récupéré
-                            messageDiv.appendChild(pseudoSpan);
+                            emailSpan.textContent = userInfo && userInfo.email ? userInfo.email : "Anonyme";
+                            messageDiv.appendChild(emailSpan);
                         }, { onlyOnce: true });
 
                         const textSpan = document.createElement('span');
@@ -198,7 +197,7 @@
             const text = messageInput.value.trim();
             if (text !== '') { // Vérifier si le message n'est pas vide
                 const currentUser = auth.currentUser;
-                // Inclure l'uid de l'utilisateur dans l'objet message
+                // Inclure l'uid
                 push(ref(database, 'messages'), {
                     uid: currentUser.uid,
                     text: text,
@@ -216,12 +215,12 @@
             const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
             sortedMessages.forEach((message) => {
-                // Récupérer le pseudo de l'utilisateur ou utiliser son adresse e-mail si aucun pseudo n'est trouvé
+                // Récupérer l'e-mail de l'utilisateur
                 const userRef = ref(database, 'users/' + message.uid);
                 onValue(userRef, (userSnapshot) => {
                     const userInfo = userSnapshot.val();
-                    // Si aucun pseudo n'est trouvé, 'Anonyme' sera remplacé par l'email de l'utilisateur
-                    const displayText = userInfo && userInfo.pseudo ? userInfo.pseudo : (userInfo && userInfo.email ? userInfo.email : "Anonyme");
+                    // Si aucun e-mail n'est trouvé, affiche 'Anonyme'
+                    const displayText = userInfo && userInfo.email ? userInfo.email : "Anonyme";
                     
                     const messageDiv = document.createElement('div');
                     const displaySpan = document.createElement('span');
