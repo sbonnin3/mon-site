@@ -154,6 +154,7 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.body.style.display = "block";
+                handleUserLogin(user);
 
                 // Modifier la fonction onValue pour append les messages au lieu de prepend
                 onValue(messagesRef, (snapshot) => {
