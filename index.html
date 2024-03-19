@@ -99,6 +99,8 @@
         auth.onAuthStateChanged((user) => {
             if (user && !user.displayName) {
                 document.getElementById('user-pseudo').style.display = 'block';
+            } else {
+                document.getElementById('user-pseudo').style.display = 'none';
             }
         });
     </script>
