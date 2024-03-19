@@ -152,45 +152,36 @@
         const messagesRef = ref(database, 'messages');
       
         onAuthStateChanged(auth, user => {
-    if (user) {
-        document.body.style.display = "block";
+            if (user) {
+                document.body.style.display = "block";
+                handleUserLogin(user);
 
-        onValue(messagesRef, (snapshot) => {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Clear previous messages
+                // Modifier la fonction onValue pour append les messages au lieu de prepend
+                onValue(messagesRef, (snapshot) => {
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = ''; // Effacer les messages précédents
 
-            const messages = snapshot.val();
-            const sortedMessages = Object.values(messages).sort((a, b) => b.timestamp - a.timestamp);
+                    const messages = snapshot.val();
+                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
-            sortedMessages.forEach((message) => {
-                const userRef = ref(database, 'users/' + message.uid);
-                onValue(userRef, (userSnapshot) => {
-                    const userInfo = userSnapshot.val();
-                    const email = userInfo ? userInfo.email : "No email"; // Change to the correct path if needed
+                    sortedMessages.forEach((message) => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.classList.add('message-div');
+                        const textSpan = document.createElement('span');
+                        textSpan.classList.add('message-text');
+                        textSpan.textContent = message.text; // Display only the message text
 
-                    const messageDiv = document.createElement('div');
-                    messageDiv.classList.add('message-div');
+                        messageDiv.appendChild(textSpan);
+                        messagesContainer.appendChild(messageDiv);
+                    });
 
-                    const emailSpan = document.createElement('span');
-                    emailSpan.classList.add('message-email');
-                    emailSpan.textContent = email + ": "; // Display the user's email
-                    
-                    const textSpan = document.createElement('span');
-                    textSpan.classList.add('message-text');
-                    textSpan.textContent = message.text; // Display the message text
-                    
-                    messageDiv.appendChild(emailSpan);
-                    messageDiv.appendChild(textSpan);
-                    messagesContainer.appendChild(messageDiv);
-                }, { onlyOnce: true });
-            });
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
 
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                window.location.href = 'index.html';
+            }
         });
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 
       
         document.getElementById('send-button').addEventListener('click', () => {
