@@ -174,7 +174,7 @@
                         const userRef = ref(database, 'users/' + message.uid);
                         onValue(userRef, (snapshot) => {
                             const userInfo = snapshot.val();
-                            const email = userInfo && userInfo.email ? userInfo.email : "Anonyme";
+                            const email = userInfo && userInfo.email ? userInfo.email : "Anonyme :";
                             textSpan.textContent = email + " : " + message.text;
                             messagesContainer.appendChild(messageDiv);
                         }, { onlyOnce: true });
