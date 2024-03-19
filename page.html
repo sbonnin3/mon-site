@@ -148,57 +148,55 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
-      
-        const messagesRef = ref(database, 'messages');
-      
+
+        let messagesEventListener = null; // Variable pour suivre l'écouteur d'événements
+
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.body.style.display = "block";
-                handleUserLogin(user);
+                const messagesRef = ref(database, 'messages');
 
-                // Modifier la fonction onValue pour append les messages au lieu de prepend
-                onValue(messagesRef, (snapshot) => {
-                    const messagesContainer = document.getElementById('messages');
-                    messagesContainer.innerHTML = ''; // Effacer les messages précédents
+                // Vérifier si l'écouteur d'événements est déjà attaché
+                if (!messagesEventListener) {
+                    messagesEventListener = onValue(messagesRef, (snapshot) => {
+                        const messagesContainer = document.getElementById('messages');
+                        messagesContainer.innerHTML = ''; // Effacer les messages précédents
 
-                    const messages = snapshot.val();
-                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                        const messages = snapshot.val();
+                        const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
-                    sortedMessages.forEach((message) => {
-                        const messageDiv = document.createElement('div');
-                        const pseudoSpan = document.createElement('span');
-                        pseudoSpan.classList.add('message-pseudo');
+                        sortedMessages.forEach((message) => {
+                            const userRef = ref(database, 'users/' + message.uid);
+                            onValue(userRef, (userSnapshot) => {
+                                const userInfo = userSnapshot.val();
+                                const pseudo = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
+                                
+                                const messageDiv = document.createElement('div');
+                                const pseudoSpan = document.createElement('span');
+                                pseudoSpan.textContent = pseudo + " : "; // Utiliser le pseudo récupéré
+                                pseudoSpan.classList.add('message-pseudo');
+                                
+                                const textSpan = document.createElement('span');
+                                textSpan.textContent = message.text;
+                                textSpan.classList.add('message-text');
 
-                        // Ici, on va chercher le pseudo associé à l'uid du message
-                        const userRef = ref(database, 'users/' + message.uid);
-                        onValue(userRef, (snapshot) => {
-                            const userInfo = snapshot.val();
-                            pseudoSpan.textContent = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
-                            // Assurez-vous d'ajouter le pseudoSpan dans le DOM après l'avoir récupéré
-                            messageDiv.appendChild(pseudoSpan);
-                        }, { onlyOnce: true });
-
-                        const textSpan = document.createElement('span');
-                        textSpan.classList.add('message-text');
-                        textSpan.textContent = message.text;
-
-                        messageDiv.appendChild(textSpan);
-                        messagesContainer.appendChild(messageDiv);
+                                messageDiv.appendChild(pseudoSpan);
+                                messageDiv.appendChild(textSpan);
+                                messagesContainer.appendChild(messageDiv);
+                            }, { onlyOnce: true });
+                        });
                     });
-
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                });
+                }
             } else {
                 window.location.href = 'index.html';
             }
         });
-      
+
         document.getElementById('send-button').addEventListener('click', () => {
             const messageInput = document.getElementById('message-input');
             const text = messageInput.value.trim();
-            if (text !== '') { // Vérifier si le message n'est pas vide
+            if (text !== '') {
                 const currentUser = auth.currentUser;
-                // Inclure l'uid de l'utilisateur dans l'objet message
                 push(ref(database, 'messages'), {
                     uid: currentUser.uid,
                     text: text,
@@ -208,43 +206,12 @@
             }
         });
 
-        onValue(ref(database, 'messages'), (snapshot) => {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Vider le conteneur de messages
-
-            const messages = snapshot.val();
-            const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
-
-            sortedMessages.forEach((message) => {
-                const userRef = ref(database, 'users/' + message.uid);
-                onValue(userRef, (userSnapshot) => {
-                    const userInfo = userSnapshot.val();
-                    const pseudo = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
-                    
-                    const messageDiv = document.createElement('div');
-                    const pseudoSpan = document.createElement('span');
-                    pseudoSpan.textContent = pseudo + " : "; // Utiliser le pseudo récupéré
-                    pseudoSpan.classList.add('message-pseudo');
-                    
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = message.text;
-                    textSpan.classList.add('message-text');
-
-                    messageDiv.appendChild(pseudoSpan);
-                    messageDiv.appendChild(textSpan);
-                    messagesContainer.appendChild(messageDiv);
-                }, { onlyOnce: true });
-            });
-
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        });
-      
         document.getElementById('logout-button').addEventListener('click', () => {
-          signOut(auth).then(() => {
-            window.location.href = 'index.html';
-          }).catch((error) => {
-            console.error('Erreur de déconnexion', error);
-          });
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error('Erreur de déconnexion', error);
+            });
         });
     </script>      
 </body>
