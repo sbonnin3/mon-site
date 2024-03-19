@@ -117,15 +117,14 @@
     </style>
 </head>
 <body>
+    <!-- Bouton de retour à la page du profil -->
     <a href="profile.html" id="profile-link">Profil</a>
+    <!-- Bouton de déconnexion -->
     <button id="logout-button">Déconnexion</button>
+    <!-- Container pour la discussion -->
     <div id="chat-container">
         <h1>Bienvenue dans la discussion !</h1>
-        <p>Tout le monde identifié peut lire vos messages.</p>
-        <!-- Plus de contenu sécurisé ici -->
-        <div id="messages">
-            <!-- Les messages seront injectés ici -->
-        </div>
+        <div id="messages"></div>
         <input type="text" id="message-input" placeholder="Écrivez un message">
         <button id="send-button">Envoyer</button>
         <div class="clear"></div>
@@ -155,30 +154,36 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.body.style.display = "block";
-                
-                // Modifier la fonction onValue pour append les messages au lieu de prepend
+                // Récupération et affichage des messages avec le pseudo au lieu de l'email
                 onValue(messagesRef, (snapshot) => {
-                const messagesContainer = document.getElementById('messages');
-                messagesContainer.innerHTML = ''; // Effacer les messages précédents
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = '';
+                    const messages = snapshot.val();
+                    const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
 
-                const messages = snapshot.val();
-                // Trier les messages par timestamp
-                const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                    sortedMessages.forEach((message) => {
+                        // Création d'un div pour chaque message
+                        const messageDiv = document.createElement('div');
+                        const pseudoSpan = document.createElement('span');
+                        pseudoSpan.classList.add('message-pseudo');
 
-                sortedMessages.forEach((message) => {
-                    const messageDiv = document.createElement('div');
-                    const emailSpan = document.createElement('span');
-                    emailSpan.textContent = message.email + ': ';
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = message.text;
-                    
-                    messageDiv.appendChild(emailSpan);
-                    messageDiv.appendChild(textSpan);
-                    messagesContainer.appendChild(messageDiv); // Ajouter le nouveau message en bas
-                });
+                        // Ici, on va chercher le pseudo associé à chaque message
+                        const userRef = ref(database, 'users/' + message.uid);
+                        onValue(userRef, (snapshot) => {
+                            const userInfo = snapshot.val();
+                            pseudoSpan.textContent = userInfo && userInfo.pseudo ? userInfo.pseudo : "Anonyme";
+                        }, { onlyOnce: true });
 
-                // Faire défiler le conteneur vers le bas pour afficher le dernier message
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        const textSpan = document.createElement('span');
+                        textSpan.classList.add('message-text');
+                        textSpan.textContent = message.text;
+
+                        messageDiv.appendChild(pseudoSpan);
+                        messageDiv.appendChild(textSpan);
+                        messagesContainer.appendChild(messageDiv);
+                    });
+
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 });
             } else {
                 window.location.href = 'index.html';
