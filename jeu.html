@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Jeu Pierre-Papier-Ciseaux</title>
+    <title>Jeu de Morpion</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,70 +12,66 @@
             padding: 20px;
         }
 
-        h1 {
-            color: #333;
-        }
-
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        #logout-button,
+        #create-game,
         #accueil-button {
-            background-color: #f44336;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
         }
 
-        #logout-button:hover,
+        #create-game:hover,
         #accueil-button:hover {
-            background-color: #d32f2f;
+            background-color: #45a049;
         }
 
-        #player-status,
-        #result {
+        #game-list {
+            margin-bottom: 20px;
+        }
+
+        .game-item {
+            background-color: #ddd;
+            padding: 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        #morpion-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: auto;
+        }
+
+        .cell {
+            background-color: #fff;
+            border: 1px solid #999;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        #game-info {
+            text-align: center;
             margin-top: 20px;
-            font-size: 20px;
-        }
-
-        #game-area button {
-            display: none;
-            /* Cache les boutons du jeu jusqu'à ce que le joueur rejoigne */
         }
     </style>
 </head>
 
 <body>
-    <div class="profile-container">
-        <h1>Jeu Pierre-Papier-Ciseaux</h1>
-        <button id="logout-button">Déconnexion</button>
-        <button id="accueil-button">Accueil</button>
-        <button id="join-as-player1">Rejoindre comme Joueur 1</button>
-        <button id="join-as-player2">Rejoindre comme Joueur 2</button>
-        <div id="game-area">
-            <h2>Fais ton choix :</h2>
-            <button id="pierre">Pierre</button>
-            <button id="papier">Papier</button>
-            <button id="ciseaux">Ciseaux</button>
-            <div id="player-status"></div>
-            <div id="result"></div>
-        </div>
-    </div>
+    <button id="create-game">Créer une partie</button>
+    <div id="game-list"></div>
+    <div id="morpion-board"></div>
+    <div id="game-info"></div>
+    <button id="accueil-button">Retour à l'accueil</button>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
         import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
-        import { getDatabase, ref, set, onValue, update } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
+        import { getDatabase, ref, push, onValue, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyD5ao6NuYU1RmCGleCRPZH7wtWPZ-yy4eo",
@@ -92,138 +88,176 @@
         const auth = getAuth(app);
         const database = getDatabase(app);
 
-        document.getElementById('accueil-button').addEventListener('click', () => {
-            window.location.href = 'accueil.html';
-        });
-        document.getElementById('logout-button').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                console.error('Erreur de déconnexion', error);
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                } else {
+                    initGame();
+                }
             });
         });
 
-        let currentPlayer = ''; // 'player1' ou 'player2'
-        const gameRef = ref(database, 'game');
-
-        document.getElementById('join-as-player1').addEventListener('click', () => joinGame('player1'));
-        document.getElementById('join-as-player2').addEventListener('click', () => joinGame('player2'));
-
-        function joinGame(player) {
-            const playerRef = ref(database, 'game/' + player);
-            onValue(playerRef, (snapshot) => {
-                const playerData = snapshot.val();
-                if (!playerData || !playerData.email) {
-                    // Si le joueur n'a pas déjà rejoint, permettre de rejoindre
-                    set(playerRef, {
-                        email: auth.currentUser.email,
-                        choice: null,
-                        hasJoined: true
-                    }).then(() => {
-                        // Marquer le joueur comme ayant rejoint
-                        currentPlayer = player;
-                        document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'inline-block');
-                        document.getElementById('player-status').textContent = `Vous êtes ${player}. Faites votre choix.`;
-                        // Masquer les boutons de rejoindre pour empêcher d'autres de rejoindre comme le même joueur
-                        document.getElementById('join-as-player1').style.display = 'none';
-                        document.getElementById('join-as-player2').style.display = 'none';
-
-                        // Configurer une action onDisconnect pour nettoyer les données du joueur
-                        onDisconnect(playerRef).set({
-                            email: null,
-                            choice: null,
-                            hasJoined: false
-                        });
-                    });
-                } else {
-                    alert("Ce rôle est déjà pris, veuillez choisir l'autre rôle.");
-                }
-            }, {
-                onlyOnce: true
+        function initGame() {
+            console.log("Initialisation du jeu...");
+            updateGameList();
+            document.getElementById('create-game').addEventListener('click', createGame);
+            document.getElementById('accueil-button').addEventListener('click', () => {
+                window.location.href = 'accueil.html';
             });
-        }
 
-
-        document.querySelectorAll('#game-area button').forEach(button => {
-            button.addEventListener('click', function () {
-                const playerChoice = this.id;
-                // Mettre à jour le choix dans Firebase
-                update(ref(database, 'game/' + currentPlayer), { choice: playerChoice });
-                // Indiquer que le choix a été fait et attendre l'autre joueur
-                document.getElementById('player-status').textContent = 'Choix fait. En attente de l\'autre joueur...';
-                // Désactiver ou masquer les boutons pour empêcher de changer le choix
-                document.querySelectorAll('#game-area button').forEach(b => b.disabled = true);
-            });
-        });
-
-        // Surveillance du jeu pour déterminer le gagnant
-        onValue(gameRef, (snapshot) => {
-            const gameData = snapshot.val();
-            if (gameData) {
-                // Mettre à jour l'interface utilisateur pour afficher l'email du joueur qui a rejoint
-                if (gameData.player1 && gameData.player1.hasJoined) {
-                    document.getElementById('join-as-player1').textContent = gameData.player1.email;
-                } else {
-                    document.getElementById('join-as-player1').textContent = 'Rejoindre comme Joueur 1';
-                }
-
-                if (gameData.player2 && gameData.player2.hasJoined) {
-                    document.getElementById('join-as-player2').textContent = gameData.player2.email;
-                } else {
-                    document.getElementById('join-as-player2').textContent = 'Rejoindre comme Joueur 2';
-                }
-            }
-            if (gameData && gameData.player1 && gameData.player2 && gameData.player1.choice && gameData.player2.choice) {
-                const result = determineWinner(gameData.player1.choice, gameData.player2.choice);
-                let winnerEmail = result === "C'est une égalité!" ? "Égalité, pas de gagnant!" : (result === "Joueur 1 gagne!" ? gameData.player1.email : gameData.player2.email);
-                document.getElementById('result').textContent = `Résultat : ${result}. Gagnant : ${winnerEmail}`;
-                setTimeout(resetGame, 5000); // Attendre 5 secondes avant de réinitialiser
-            }
-        });
-
-        function determineWinner(choice1, choice2) {
-            if (choice1 === choice2) {
-                return "C'est une égalité!";
-            } else if (
-                (choice1 === "pierre" && choice2 === "ciseaux") ||
-                (choice1 === "papier" && choice2 === "pierre") ||
-                (choice1 === "ciseaux" && choice2 === "papier")
-            ) {
-                return "Joueur 1 gagne!";
-            } else {
-                return "Joueur 2 gagne!";
-            }
-        }
-
-        function resetGame() {
-            setTimeout(() => {
-                set(ref(database, 'game'), {
-                    player1: {
-                        choice: null,
-                        email: null,
-                        hasJoined: false // Indique si le joueur a rejoint
-                    },
-                    player2: {
-                        choice: null,
-                        email: null,
-                        hasJoined: false // Indique si le joueur a rejoint
+            // Vérifier s'il y a un gameId dans l'URL pour rediriger automatiquement
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('gameId');
+            if (gameId) {
+                console.log("Redirection vers la partie créée:", gameId);
+                // Vérifier si l'utilisateur est déjà membre de la partie avant de rejoindre
+                const gameRef = ref(database, `games/${gameId}`);
+                get(gameRef).then(snapshot => {
+                    if (snapshot.exists()) {
+                        const game = snapshot.val();
+                        if (game.state === 'waiting for player' && (game.creator === auth.currentUser.uid || game.secondPlayer === auth.currentUser.uid)) {
+                            // Rediriger uniquement si l'utilisateur est membre de la partie
+                            joinGame(gameId);
+                        }
+                    } else {
+                        console.error("La partie n'existe pas.");
                     }
-                })
-                    .then(() => {
-                        console.log('Jeu réinitialisé pour une nouvelle partie.');
-                        document.getElementById('player-status').textContent = 'Le jeu a été réinitialisé. Rejoignez comme Joueur 1 ou Joueur 2.';
-                        document.getElementById('result').textContent = '';
-
-                        // Réinitialiser l'état des boutons pour permettre de rejoindre à nouveau
-                        document.querySelectorAll('#game-area button').forEach(button => button.style.display = 'none');
-                        document.getElementById('join-as-player1').style.display = 'inline-block';
-                        document.getElementById('join-as-player2').style.display = 'inline-block';
-                    })
-                    .catch((error) => {
-                        console.error('Erreur lors de la réinitialisation du jeu: ', error);
-                    });
-            }, 5000); // Attendez 5 secondes avant de réinitialiser pour permettre l'affichage des résultats
+                }).catch(error => {
+                    console.error("Erreur lors de la tentative de vérification de la partie:", error);
+                });
+            }
         }
+
+        function createGame() {
+            console.log("Création d'une nouvelle partie...");
+            const gamesRef = ref(database, 'games');
+            const newGameRef = push(gamesRef);
+
+            set(newGameRef, {
+                creator: auth.currentUser.uid, // Créateur de la partie
+                creatorEmail: auth.currentUser.email, // Ajout du courriel du créateur
+                state: 'waiting for player',
+            }).then(() => {
+                console.log("Partie créée avec succès:", newGameRef.key);
+                // Rediriger l'utilisateur vers la partie qu'il vient de créer
+                window.location.href = `jeu.html?gameId=${newGameRef.key}`;
+            }).catch((error) => {
+                console.error("Erreur lors de la création de la partie:", error);
+            });
+        }
+
+        function updateGameList() {
+            console.log("Mise à jour de la liste des jeux...");
+            const gamesListContainer = document.getElementById('game-list');
+            gamesListContainer.innerHTML = '';
+            const gamesRef = ref(database, 'games');
+            onValue(gamesRef, snapshot => {
+                const games = snapshot.val();
+                Object.keys(games ?? {}).forEach(gameId => {
+                    const game = games[gameId];
+                    if (game.state === 'waiting for player') {
+                        const gameItem = document.createElement('div');
+                        gameItem.classList.add('game-item');
+                        gameItem.textContent = `Partie ${gameId} - Cliquez pour rejoindre`;
+                        gameItem.addEventListener('click', () => joinGame(gameId));
+                        gamesListContainer.appendChild(gameItem);
+                    }
+                });
+            });
+        }
+
+        function joinGame(gameId, automaticJoin = false) {
+            const gameRef = ref(database, `games/${gameId}`);
+            get(gameRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const game = snapshot.val();
+                    // Vérifier si la partie est en cours
+                    if (game.state === 'in progress') {
+                        alert("Cette partie est déjà en cours.");
+                    } else if (game.state === 'waiting for player') {
+                        // Vérifier s'il n'y a pas déjà un deuxième joueur
+                        if (!game.secondPlayer || game.secondPlayer === auth.currentUser.uid) {
+                            // Mettre à jour la partie avec l'ID du deuxième joueur et changer l'état de la partie
+                            update(gameRef, {
+                                'secondPlayer': auth.currentUser.uid,
+                                'secondPlayerEmail': auth.currentUser.email // Ajouter l'e-mail du deuxième joueur
+                            }).then(() => {
+                                console.log("Vous avez rejoint la partie:", gameId);
+                                if (!automaticJoin) {
+                                    // Redirection vers la partie uniquement si la fonction n'est pas appelée automatiquement
+                                    window.location.href = `jeu.html?gameId=${gameId}`;
+                                }
+                                listenToGame(gameId);
+                            });
+                        } else {
+                            alert("Cette partie est déjà complète.");
+                        }
+                    }
+                } else {
+                    alert("La partie n'existe pas.");
+                }
+            }).catch((error) => {
+                console.error("Erreur lors de la tentative de rejoindre la partie:", error);
+            });
+        }
+
+        function listenToGame(gameId) {
+            const gameRef = ref(database, `games/${gameId}`);
+            onValue(gameRef, snapshot => {
+                const game = snapshot.val();
+                if (!game) {
+                    alert("La partie a été supprimée ou n'existe pas.");
+                    window.location.href = 'jeu.html'; // Redirige l'utilisateur vers la liste des jeux
+                    return;
+                }
+
+                // Vérifier si l'utilisateur fait déjà partie de la partie en cours
+                const isPlayerInGame = game.state === 'in progress' && (game.creator === auth.currentUser.uid || game.secondPlayer === auth.currentUser.uid);
+                if (isPlayerInGame) {
+                    // Afficher les informations sur la partie
+                    const player1Email = game.creatorEmail;
+                    const player2Email = game.secondPlayerEmail;
+                    const gameInfo = document.getElementById('game-info');
+                    gameInfo.innerHTML = `Partie en cours<br>Joueur 1: ${player1Email}<br>Joueur 2: ${player2Email}`;
+
+                    document.getElementById('game-list').style.display = 'none'; // Cache la liste des jeux
+                    document.getElementById('morpion-board').innerHTML = ''; // Réinitialise le plateau de jeu
+                    initializeBoard(game.board); // Initialise le plateau de jeu avec l'état actuel
+
+                    // Met à jour les informations de la partie (par exemple, le tour actuel)
+                    const currentPlayer = game.currentTurn === auth.currentUser.uid ? "Votre tour" : "Tour de l'adversaire";
+                    gameInfo.innerText = currentPlayer;
+                } else if (game.state === 'finished') {
+                    const winner = game.winner === auth.currentUser.uid ? "Vous avez gagné !" : "Vous avez perdu.";
+                    alert(`Partie terminée. ${winner}`);
+                    window.location.href = 'jeu.html'; // Redirige l'utilisateur vers la liste des jeux après l'affichage du résultat
+                }
+            });
+        }
+
+        function initializeBoard(boardState) {
+            const board = document.getElementById('morpion-board');
+            if (!boardState) {
+                console.error("Le tableau d'état du jeu est indéfini.");
+                return;
+            }
+            boardState.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'cell';
+                cellDiv.textContent = cell; // Met à jour le texte de la cellule selon l'état du jeu
+                cellDiv.addEventListener('click', () => handleCellClick(index));
+                board.appendChild(cellDiv);
+            });
+        }
+
+        function handleCellClick(index) {
+            // Implémentation de la logique lorsqu'un utilisateur clique sur une cellule du plateau
+            // Par exemple, vérifier si c'est son tour, mettre à jour le jeu dans Firebase, etc.
+            console.log("Cell clicked:", index);
+        }
+
+        // Implémentez ici la logique spécifique de votre jeu, comme l'initialisation du plateau, la gestion des clics sur les cellules, etc.
     </script>
 </body>
 
